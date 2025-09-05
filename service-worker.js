@@ -1,9 +1,12 @@
-const cacheName = "bem-estar-cache-v1";
+const cacheName = "bem-estar-cache-v2";
 const assets = [
+  "/",
   "/index.html",
   "/manifest.json",
   "/icon-192.png",
-  "/icon-512.png"
+  "/icon-512.png",
+  "/style.css",
+  "/app.js"
 ];
 
 self.addEventListener("install", event => {

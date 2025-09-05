@@ -1,24 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bem-Estar Pet</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pet Sitter Sabrina — Bem-Estar v6.1</title>
 <style>
-  body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#ffe6f0; color:#333; }
-  .hidden { display:none; }
-  .card { background:#f5f5dc; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-  input, select, button { padding:8px; margin:4px 0; border-radius:5px; border:1px solid #ccc; }
-  button { cursor:pointer; background:#ff6fa3; color:#fff; border:none; }
-  .badge { padding:5px 10px; border-radius:5px; background:#e0e0e0; font-size:12px; }
+:root{
+  --bg:#ffe6f0; --card:#f5f5dc; --accent:#ff6fa3; --green:#32cd32; --text:#000;
+}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:18px;}
+.h1{font-size:24px;font-weight:700;color:var(--accent);margin:0 0 10px;}
+.btn{padding:12px 16px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;transition:0.3s;}
+.btn:hover{opacity:0.9;}
+.card{background:var(--card);padding:18px;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,0.1);margin-top:14px;}
+.input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-bottom:10px;}
+.confetti{position:fixed;pointer-events:none;left:0;top:0;width:100%;height:100%;z-index:9999;}
+.small{font-size:13px;color:#333;}
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;background:white;border:1px solid #eee;font-weight:600;}
+.hidden{display:none;}
 </style>
 </head>
 <body>
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+  <div><div class="h1">Pet Sitter Sabrina — Bem-Estar (v6.1)</div><div class="small">Gamificação, pets e motivação personalizada</div></div>
+  <div id="scoreBadge" class="badge">Pontos: 0</div>
+</div>
+
 <div id="loginCard" class="card">
-  <h3>Cadastro do Usuário e Pets</h3>
-  <input id="userName" placeholder="Seu nome">
+  <h3>Cadastro inicial (obrigatório)</h3>
+  <input id="userName" class="input" placeholder="Seu nome">
   <div id="petContainer">
-    <div style="display:flex;gap:8px;margin-top:6px;">
+    <div style="display:flex;gap:8px">
       <input class="input petName" placeholder="Nome do pet" style="flex:1">
       <select class="petType">
         <option value="cão">Cão</option>
@@ -27,78 +40,70 @@
       </select>
     </div>
   </div>
-  <button onclick="addPetField()">Adicionar outro pet</button>
-  <br>
-  <button onclick="saveUser()">Salvar Cadastro</button>
+  <div style="display:flex;gap:8px;margin-top:6px">
+    <button class="btn" onclick="addPetField()">Adicionar pet</button>
+    <button class="btn" style="background:#0b8f5b" onclick="saveUser()">Salvar e entrar</button>
+  </div>
+  <div class="small" style="margin-top:8px">Seus dados ficam no navegador (localStorage).</div>
 </div>
 
 <div id="mainContent" class="hidden">
   <div class="card">
-    <h3>Check-in de Humor</h3>
-    <select id="mood">
-      <option>😃 Feliz</option>
-      <option>🙂 Neutro</option>
-      <option>😞 Triste</option>
-      <option>😰 Ansioso</option>
-      <option>😫 Estressado</option>
-      <option>😴 Cansado</option>
+    <h3>Check-in de humor</h3>
+    <select id="mood" class="input">
+      <option value="😃 Feliz">😃 Feliz</option>
+      <option value="🙂 Neutro">🙂 Neutro</option>
+      <option value="😞 Triste">😞 Triste</option>
+      <option value="😰 Ansioso">😰 Ansioso</option>
+      <option value="😫 Estressado">😫 Estressado</option>
+      <option value="😴 Cansado">😴 Cansado</option>
     </select>
-    <button onclick="saveMood()">Salvar Humor</button>
-    <p id="moodStatus"></p>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="saveMood()">Salvar</button></div>
+    <p id="moodStatus" class="small"></p>
+    <p id="petActivity" class="small"></p>
   </div>
-
-  <div class="card">
-    <h3 id="scoreBadge">Pontos: 0</h3>
-  </div>
-
-  <div id="achievementsCard" class="card hidden">
-    <h3>Suas Conquistas 🏆</h3>
-    <div id="achievementsContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;"></div>
-  </div>
-
-  <div class="card" id="petActivity"></div>
 </div>
 
-<div id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+<div id="achievementsCard" class="card hidden">
+  <h3>Suas Conquistas 🏆</h3>
+  <div id="achievementsContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;"></div>
+</div>
+
+<div id="confetti" class="confetti"></div>
 
 <script>
-const loginCard=document.getElementById('loginCard');
-const mainContent=document.getElementById('mainContent');
-const userNameInput=document.getElementById('userName');
-const petContainer=document.getElementById('petContainer');
-const scoreBadge=document.getElementById('scoreBadge');
-const moodStatus=document.getElementById('moodStatus');
-const petActivity=document.getElementById('petActivity');
-const achievementsCard=document.getElementById('achievementsCard');
-const achievementsContainer=document.getElementById('achievementsContainer');
-const mood=document.getElementById('mood');
+// JavaScript completo com medalhas, check-in, atividades, histórico
+const loginCard = document.getElementById('loginCard');
+const mainContent = document.getElementById('mainContent');
+const userNameInput = document.getElementById('userName');
+const petContainer = document.getElementById('petContainer');
+const scoreBadge = document.getElementById('scoreBadge');
+const moodStatus = document.getElementById('moodStatus');
+const petActivity = document.getElementById('petActivity');
+const achievementsCard = document.getElementById('achievementsCard');
+const achievementsContainer = document.getElementById('achievementsContainer');
+const mood = document.getElementById('mood');
 
-let user=null;
-let score=0;
-let petData=[];
-let achievements={};
-let activityLog=[];
+let user=null; let score=0;
+let petData=[]; let achievements={}; let activityLog=[];
 
 const allAchievements={
   'primeiro-checkin':{name:'Primeiro Check-in',desc:'Registre seu primeiro humor!',icon:'✨'},
   'humor-feliz':{name:'Felizão!',desc:'Faça um check-in de humor Feliz.',icon:'🥳'},
   'pet-lover':{name:'Pet Lover',desc:'Complete uma atividade com seu pet.',icon:'❤️'}
 };
-
 function loadData(){
   const savedUser=localStorage.getItem('userName');
   const savedPets=localStorage.getItem('petData');
   const savedScore=localStorage.getItem('score');
   const savedAchievements=localStorage.getItem('achievements');
   const savedActivityLog=localStorage.getItem('activityLog');
-
-  if(savedUser && savedPets){
+  if(savedUser){
     user=savedUser;
     petData=JSON.parse(savedPets);
     score=parseInt(savedScore)||0;
     achievements=JSON.parse(savedAchievements)||{};
     activityLog=JSON.parse(savedActivityLog)||[];
-
     loginCard.classList.add('hidden');
     mainContent.classList.remove('hidden');
     achievementsCard.classList.remove('hidden');
@@ -116,6 +121,7 @@ function updateAchievementsDisplay(){
     const badge=document.createElement('div');
     badge.className='badge';
     badge.style.opacity=isUnlocked?'1':'0.4';
+    badge.style.marginRight='5px';
     badge.textContent=isUnlocked?`${achievement.icon} ${achievement.name}`:`${achievement.icon} ?`;
     badge.title=isUnlocked?achievement.desc:'Conquista Bloqueada';
     achievementsContainer.appendChild(badge);
@@ -134,14 +140,7 @@ function unlockAchievement(key){
 function addPetField(){
   const newPetDiv=document.createElement('div');
   newPetDiv.style="display:flex;gap:8px;margin-top:6px;";
-  newPetDiv.innerHTML=`
-    <input class="input petName" placeholder="Nome do pet" style="flex:1">
-    <select class="petType">
-      <option value="cão">Cão</option>
-      <option value="gato">Gato</option>
-      <option value="outro">Outro</option>
-    </select>
-  `;
+  newPetDiv.innerHTML=`<input class="input petName" placeholder="Nome do pet" style="flex:1"><select class="petType"><option value="cão">Cão</option><option value="gato">Gato</option><option value="outro">Outro</option></select>`;
   petContainer.appendChild(newPetDiv);
 }
 
@@ -149,23 +148,12 @@ function saveUser(){
   const userName=userNameInput.value.trim();
   const petNames=document.querySelectorAll('.petName');
   const petTypes=document.querySelectorAll('.petType');
-  
-  if(!userName || !petNames[0].value.trim()){
-    alert("Por favor, preencha seu nome e o nome do seu pet.");
-    return;
-  }
-
+  if(!userName||!petNames[0].value.trim()){alert("Preencha nome e nome do pet."); return;}
   user=userName;
   petData=[];
-  for(let i=0;i<petNames.length;i++){
-    if(petNames[i].value.trim()!==""){
-      petData.push({name:petNames[i].value.trim(),type:petTypes[i].value});
-    }
-  }
-
+  for(let i=0;i<petNames.length;i++){petData.push({name:petNames[i].value.trim(),type:petTypes[i].value});}
   localStorage.setItem('userName',user);
   localStorage.setItem('petData',JSON.stringify(petData));
-  
   loginCard.classList.add('hidden');
   mainContent.classList.remove('hidden');
   achievementsCard.classList.remove('hidden');
@@ -180,29 +168,19 @@ function saveMood(){
   localStorage.setItem('score',score);
   scoreBadge.textContent=`Pontos: ${score}`;
   moodStatus.textContent=`Humor salvo: ${selectedMood}. Você ganhou ${moodPoints[selectedMood]||0} pontos!`;
-  
-  if(selectedMood==="😃 Feliz"){ triggerConfetti(); unlockAchievement('humor-feliz'); }
+  if(selectedMood==="😃 Feliz"){triggerConfetti(); unlockAchievement('humor-feliz');}
   unlockAchievement('primeiro-checkin');
   updateActivityLog('check-in',selectedMood);
 }
 
 function generatePetActivity(){
   if(petData.length>0){
-    let activityMessage="Lembre-se de fazer algo por seus pets hoje! ";
-    petData.forEach(pet=>{
-      const activities={
-        cão:["ir passear 🐾","brincar de bolinha 🎾","dar um petisco 🦴","fazer carinho na barriga ❤️"],
-        gato:["usar a varinha 🎣","dar uma nova caixa de papelão 📦","escovar o pelo 🐈","dar um sachê 🐟"],
-        outro:["verificar se a água está fresca","brincar com o brinquedo favorito","dar a comida preferida"]
-      };
-      const petActivities=activities[pet.type]||activities.outro;
-      const randomActivity=petActivities[Math.floor(Math.random()*petActivities.length)];
-      activityMessage+=`<br>Seu pet <b>${pet.name}</b> gostaria de <b>${randomActivity}</b>. 
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn" style="background:#4CAF50;font-size:12px;" onclick="logActivity('${randomActivity}')">Marcar como feito (+25 pts)</button>
-        </div>`;
-    });
-    petActivity.innerHTML=activityMessage;
+    const randomPet=petData[Math.floor(Math.random()*petData.length)];
+    const activities={cão:["ir passear 🐾","brincar de bolinha 🎾","dar um petisco 🦴","fazer carinho na barriga ❤️"],gato:["usar a varinha 🎣","dar uma nova caixa de papelão 📦","escovar o pelo 🐈","dar um sachê 🐟"],outro:["verificar se a água está fresca","brincar com o brinquedo favorito","dar a comida preferida"]};
+    const petActivities=activities[randomPet.type]||activities.outro;
+    const randomActivity=petActivities[Math.floor(Math.random()*petActivities.length)];
+    petActivity.innerHTML=`Lembre-se de fazer algo por seu pet hoje!
+Seu pet <b>${randomPet.name}</b> gostaria de <b>${randomActivity}</b>.<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="background:var(--green);font-size:12px;" onclick="logActivity('${randomActivity}')">Marcar como feito (+25 pts)</button></div>`;
   }
 }
 
@@ -210,6 +188,7 @@ function logActivity(activity){
   score+=25;
   localStorage.setItem('score',score);
   scoreBadge.textContent=`Pontos: ${score}`;
+  petActivity.textContent=`Ótimo! Você ganhou 25 pontos por fazer ${activity}.`;
   unlockAchievement('pet-lover');
   updateActivityLog('pet-activity',activity);
 }
