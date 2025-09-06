@@ -3,138 +3,240 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bem-estar com seu Pet</title>
+  <title>Seu Melhor Amigo 🐾</title>
   <style>
-    :root {
-      --green: #2ecc71;
-      --pink: #e91e63;
-      --black: #2c2c2c;
-      --beige: #f5f5dc;
-    }
-
     body {
       font-family: Arial, sans-serif;
+      background: #fefefe;
       margin: 0;
       padding: 0;
-      background: #fafafa;
-      color: var(--black);
-    }
-
-    .container {
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    h1, h2 {
       text-align: center;
-      color: var(--pink);
     }
-
-    .card {
-      background: var(--beige);
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .input, select {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    .btn {
-      background: var(--pink);
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
+    .screen { display: none; padding: 20px; }
+    .card { background: #fff; padding: 15px; border-radius: 10px; margin: 10px auto; max-width: 400px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .input, select { padding: 8px; margin: 5px; width: 90%; }
+    .btn { background: #4caf50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
+    .btn:hover { background: #45a049; }
+    #scoreBadge { font-weight: bold; margin: 10px; display:block; }
+    .badge { padding: 6px 10px; border-radius: 6px; background: #eee; font-size: 12px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="registerScreen" class="card">
-      <h2>Cadastro</h2>
+  <div id="registerScreen" class="screen">
+    <div class="card">
+      <h2>Cadastro 👤</h2>
       <input id="userName" class="input" placeholder="Seu nome">
-
-      <h3>Pets</h3>
       <div id="petContainer"></div>
-
-      <div class="row">
-        <button class="btn" onclick="addPetField()">Adicionar pet</button>
-        <button class="btn" style="background:var(--green)" onclick="saveUser()">Salvar e Entrar</button>
-      </div>
-    </div>
-
-    <div id="appScreen" class="card" style="display:none;">
-      <h2>Bem-vindo, <span id="welcomeName"></span>!</h2>
-      <p>Seus pets: <span id="petList"></span></p>
+      <button class="btn" onclick="addPetField()">+ Adicionar Pet</button>
+      <br><br>
+      <button class="btn" onclick="saveUser()">Salvar</button>
     </div>
   </div>
 
+  <div id="appScreen" class="screen">
+    <div class="card">
+      <h2>Bem-vindo, <span id="welcomeName"></span>!</h2>
+      <p>Seus pets: <span id="petList"></span></p>
+      <span id="scoreBadge">Pontos: 0</span>
+    </div>
+
+    <div id="moodCard" class="card">
+      <h3>Como você está se sentindo hoje?</h3>
+      <select id="mood" class="input">
+        <option>😃 Feliz</option>
+        <option>🙂 Neutro</option>
+        <option>😞 Triste</option>
+        <option>😰 Ansioso</option>
+        <option>😫 Estressado</option>
+        <option>😴 Cansado</option>
+      </select>
+      <button class="btn" onclick="saveMood()">Salvar Humor</button>
+      <p id="moodStatus"></p>
+    </div>
+
+    <div id="activityCard" class="card">
+      <h3>Lembrete de Atividade 🐕🐈</h3>
+      <p id="petActivity"></p>
+    </div>
+
+    <div id="achievementsCard" class="card">
+      <h3>Suas Conquistas 🏆</h3>
+      <div id="achievementsContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;"></div>
+    </div>
+
+    <div id="historyCard" class="card">
+      <h3>Histórico da Semana 📊</h3>
+      <canvas id="historyChart" width="350" height="200"></canvas>
+    </div>
+  </div>
+
+  <div id="confetti"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    function addPetField(name = "", type = "cão") {
-      const container = document.getElementById("petContainer");
-      const row = document.createElement("div");
-      row.className = "row";
-      row.innerHTML = `
-        <input class="input petName" placeholder="Nome do pet" value="${name}">
+    const loginCard = document.getElementById('registerScreen');
+    const mainContent = document.getElementById('appScreen');
+    const userNameInput = document.getElementById('userName');
+    const petContainer = document.getElementById('petContainer');
+    const scoreBadge = document.getElementById('scoreBadge');
+    const moodStatus = document.getElementById('moodStatus');
+    const petActivity = document.getElementById('petActivity');
+    const achievementsContainer = document.getElementById('achievementsContainer');
+    const mood = document.getElementById('mood');
+
+    let user = null;
+    let score = 0;
+    let achievements = {};
+    let activityLog = [];
+
+    const allAchievements = {
+      'primeiro-checkin': { name: 'Primeiro Check-in', desc: 'Registre seu primeiro humor!', icon: '✨' },
+      'humor-feliz': { name: 'Felizão!', desc: 'Faça um check-in de humor Feliz.', icon: '🥳' },
+      'pet-lover': { name: 'Pet Lover', desc: 'Complete uma atividade com seu pet.', icon: '❤️' }
+    };
+
+    const activitiesDB = {
+      cão: ["ir passear 🐾","brincar de bolinha 🎾","dar um petisco 🦴","fazer carinho na barriga ❤️","treinar comandos básicos","correr no parque","esconde-esconde","levar ao pet shop","ensinar truques","massagem relaxante"],
+      gato: ["usar a varinha 🎣","dar uma caixa de papelão 📦","escovar o pelo 🐈","dar um sachê 🐟","jogo de caça","brincar com laser","esconder petiscos","explorar lugares novos","colocar arranhador novo","momento de colo"],
+      outro: ["verificar a água","brincar com brinquedo favorito","dar comida preferida","momento de carinho","limpar o espaço","ensinar truque novo","exploração supervisionada","massagem leve","trocar brinquedos","tempo de qualidade"]
+    };
+
+    function addPetField() {
+      const newPetDiv = document.createElement('div');
+      newPetDiv.style = "display:flex;gap:8px;margin-top:6px;";
+      newPetDiv.innerHTML = `
+        <input class="input petName" placeholder="Nome do pet" style="flex:1">
         <select class="petType">
-          <option value="cão" ${type === "cão" ? "selected" : ""}>Cão</option>
-          <option value="gato" ${type === "gato" ? "selected" : ""}>Gato</option>
-          <option value="outro" ${type === "outro" ? "selected" : ""}>Outro</option>
+          <option value="cão">Cão</option>
+          <option value="gato">Gato</option>
+          <option value="outro">Outro</option>
         </select>
       `;
-      container.appendChild(row);
+      petContainer.appendChild(newPetDiv);
     }
 
     function saveUser() {
-      const name = document.getElementById("userName").value.trim();
-      const petNames = [...document.querySelectorAll(".petName")].map(e => e.value.trim());
-      const petTypes = [...document.querySelectorAll(".petType")].map(e => e.value);
+      const userName = userNameInput.value.trim();
+      const petNames = document.querySelectorAll('.petName');
+      const petTypes = document.querySelectorAll('.petType');
 
-      if (!name || petNames.some(p => !p)) {
-        alert("Preencha seu nome e os nomes dos pets!");
+      if (!userName || !petNames[0].value.trim()) {
+        alert("Por favor, preencha seu nome e o nome do seu pet.");
         return;
       }
 
-      const pets = petNames.map((p, i) => ({ nome: p, tipo: petTypes[i] }));
+      user = { name: userName, pets: [] };
+      for (let i = 0; i < petNames.length; i++) {
+        user.pets.push({ nome: petNames[i].value.trim(), tipo: petTypes[i].value });
+      }
 
-      const user = { name, pets };
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('score', score);
 
       showApp(user);
     }
 
     function showApp(user) {
-      document.getElementById("registerScreen").style.display = "none";
-      document.getElementById("appScreen").style.display = "block";
+      loginCard.style.display = "none";
+      mainContent.style.display = "block";
       document.getElementById("welcomeName").textContent = user.name;
-      document.getElementById("petList").textContent = user.pets.map(p => `${p.nome} (${p.tipo})`).join(", ");
+      document.getElementById("petList").textContent = user.pets.map(p => `${p.nome} (${p.tipo})`).join(", ") || "Nenhum pet cadastrado.";
+      scoreBadge.textContent = `Pontos: ${score}`;
+      updateAchievementsDisplay();
+      generatePetActivity();
+      renderHistory();
+    }
+
+    function saveMood() {
+      const selectedMood = mood.value;
+      const moodPoints = { "😃 Feliz": 20, "🙂 Neutro": 10, "😞 Triste": 5, "😰 Ansioso": 5, "😫 Estressado": 5, "😴 Cansado": 5 };
+
+      score += moodPoints[selectedMood] || 0;
+      localStorage.setItem('score', score);
+      scoreBadge.textContent = `Pontos: ${score}`;
+      moodStatus.textContent = `Humor salvo: ${selectedMood}`;
+
+      if (selectedMood === "😃 Feliz") unlockAchievement('humor-feliz');
+      unlockAchievement('primeiro-checkin');
+      updateActivityLog('check-in', selectedMood);
+      renderHistory();
+    }
+
+    function generatePetActivity() {
+      if (user && user.pets.length > 0) {
+        const randomPet = user.pets[Math.floor(Math.random() * user.pets.length)];
+        const petActivities = activitiesDB[randomPet.tipo] || activitiesDB.outro;
+        const randomActivity = petActivities[Math.floor(Math.random() * petActivities.length)];
+        petActivity.innerHTML = `Seu pet <b>${randomPet.nome}</b> gostaria de <b>${randomActivity}</b>.
+        <br><button class="btn" onclick="logActivity('${randomActivity}')">Marcar como feito (+25 pts)</button>`;
+      }
+    }
+
+    function logActivity(activity) {
+      score += 25;
+      localStorage.setItem('score', score);
+      scoreBadge.textContent = `Pontos: ${score}`;
+      petActivity.textContent = `Ótimo! Você ganhou 25 pontos por ${activity}.`;
+      unlockAchievement('pet-lover');
+      updateActivityLog('pet-activity', activity);
+      renderHistory();
+    }
+
+    function updateActivityLog(type, details) {
+      activityLog.push({ type, details, date: new Date().toISOString() });
+      localStorage.setItem('activityLog', JSON.stringify(activityLog));
+    }
+
+    function updateAchievementsDisplay() {
+      achievementsContainer.innerHTML = '';
+      for (const key in allAchievements) {
+        const achievement = allAchievements[key];
+        const isUnlocked = achievements[key];
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.style.opacity = isUnlocked ? '1' : '0.4';
+        badge.textContent = isUnlocked ? `${achievement.icon} ${achievement.name}` : `${achievement.icon} ?`;
+        badge.title = isUnlocked ? achievement.desc : 'Conquista Bloqueada';
+        achievementsContainer.appendChild(badge);
+      }
+    }
+
+    function unlockAchievement(key) {
+      if (!achievements[key]) {
+        achievements[key] = true;
+        localStorage.setItem('achievements', JSON.stringify(achievements));
+        alert(`Parabéns! Você desbloqueou: ${allAchievements[key].name}`);
+        updateAchievementsDisplay();
+      }
+    }
+
+    function renderHistory() {
+      const ctx = document.getElementById('historyChart').getContext('2d');
+      const last7 = activityLog.slice(-7);
+      const labels = last7.map(a => new Date(a.date).toLocaleDateString());
+      const moods = last7.map(a => a.type === 'check-in' ? a.details : null);
+
+      new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Humor/Atividades', data: moods.map((m,i)=>i+1), borderColor:'#4caf50', fill:false }] },
+        options: { responsive: true }
+      });
     }
 
     window.onload = () => {
-      const saved = localStorage.getItem("user");
-      if (saved) {
-        showApp(JSON.parse(saved));
-      } else {
-        addPetField(); // garante que apareça 1 campo de pet no início
-      }
+      const savedUser = localStorage.getItem("user");
+      const savedScore = localStorage.getItem("score");
+      const savedAchievements = localStorage.getItem("achievements");
+      const savedActivityLog = localStorage.getItem("activityLog");
+
+      if (savedUser) {
+        user = JSON.parse(savedUser);
+        score = parseInt(savedScore) || 0;
+        achievements = JSON.parse(savedAchievements) || {};
+        activityLog = JSON.parse(savedActivityLog) || [];
+        if (user.name && user.pets && user.pets.length > 0) showApp(user);
+        else addPetField();
+      } else addPetField();
     };
   </script>
 </body>
