@@ -1,21 +1,12 @@
 {
-  "name": "Bem-Estar Pet",
+  "name": "Bem-Estar Pet v7",
   "short_name": "Bem-Estar",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffe6f0",
+  "background_color": "#fff7fb",
   "theme_color": "#ff6fa3",
-  "description": "App para bem-estar do usuário e seus pets com gamificação.",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
   ]
 }
