@@ -1,110 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bem-Estar Pet — v7</title>
-<link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root{
-  --bg:#fff7fb;
-  --card:#f5f5dc;
-  --accent:#ff6fa3;
-  --green:#32cd32;
-  --black:#0a0a0a;
-  --muted:#666;
-}
-*{box-sizing:border-box}
-body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--black);margin:0;padding:18px;}
-.header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.h1{font-size:20px;color:var(--accent);margin:0}
-.small{font-size:13px;color:var(--muted)}
-.card{background:var(--card);padding:14px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-top:12px}
-.input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-bottom:8px;font-size:14px}
-.btn{padding:10px 14px;border-radius:12px;border:none;background:var(--accent);color:white;cursor:pointer;font-weight:600}
-.btn-ghost{background:transparent;border:1px solid #ddd;color:var(--black)}
-.row{display:flex;gap:8px;align-items:center}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:white;border:1px solid #eee;font-weight:600}
-.confetti{position:fixed;pointer-events:none;left:0;top:0;width:100%;height:100%;z-index:9999;overflow:hidden}
-.hidden{display:none}
-.achiv{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.achiv .med{background:#fff;padding:8px;border-radius:8px;border:1px solid #eee;opacity:0.4}
-.achiv .med.unlocked{opacity:1}
-.footer{font-size:12px;color:var(--muted);margin-top:14px}
-.activity-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:#fff;border-radius:8px;margin-top:6px;border:1px solid #eee}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bem-estar com seu Pet</title>
+  <style>
+    :root {
+      --green: #2ecc71;
+      --pink: #e91e63;
+      --black: #2c2c2c;
+      --beige: #f5f5dc;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: var(--black);
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: var(--pink);
+    }
+
+    .card {
+      background: var(--beige);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .input, select {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .btn {
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
 </head>
 <body>
-<div class="header">
-  <div>
-    <div class="h1">Bem-Estar Pet — v7</div>
-    <div class="small">Cores: rosa, verde, preto — Cards em bege</div>
-  </div>
-  <div id="scoreBadge" class="badge">Pontos: 0</div>
-</div>
+  <div class="container">
+    <div id="registerScreen" class="card">
+      <h2>Cadastro</h2>
+      <input id="userName" class="input" placeholder="Seu nome">
 
-<div id="loginCard" class="card">
-  <h3>Cadastro (obrigatório)</h3>
-  <input id="userName" class="input" placeholder="Seu nome">
-  <div id="petContainer">
-    <div class="row" style="margin-top:6px">
-      <input class="input petName" placeholder="Nome do pet" style="flex:1">
-      <select class="petType">
-        <option value="cão">Cão</option><option value="gato">Gato</option><option value="outro">Outro</option>
-      </select>
+      <h3>Pets</h3>
+      <div id="petContainer"></div>
+
+      <div class="row">
+        <button class="btn" onclick="addPetField()">Adicionar pet</button>
+        <button class="btn" style="background:var(--green)" onclick="saveUser()">Salvar e Entrar</button>
+      </div>
+    </div>
+
+    <div id="appScreen" class="card" style="display:none;">
+      <h2>Bem-vindo, <span id="welcomeName"></span>!</h2>
+      <p>Seus pets: <span id="petList"></span></p>
     </div>
   </div>
-  <div style="display:flex;gap:8px;margin-top:8px">
-    <button class="btn" onclick="addPetField()">Adicionar pet</button>
-    <button class="btn" style="background:var(--green)" onclick="saveUser()">Salvar e Entrar</button>
-  </div>
-  <div class="small" style="margin-top:8px">Dados salvos no seu navegador. Você precisa cadastrar antes de usar o app.</div>
-</div>
 
-<div id="mainContent" class="hidden">
-  <div class="card">
-    <h3>Check-in de Humor</h3>
-    <select id="mood" class="input">
-      <option value="😃 Feliz">😃 Feliz</option>
-      <option value="🙂 Neutro">🙂 Neutro</option>
-      <option value="😞 Triste">😞 Triste</option>
-      <option value="😰 Ansioso">😰 Ansioso</option>
-      <option value="😫 Estressado">😫 Estressado</option>
-      <option value="😴 Cansado">😴 Cansado</option>
-    </select>
-    <div style="display:flex;gap:8px">
-      <button class="btn" onclick="saveMood()">Salvar Check-in</button>
-      <button class="btn btn-ghost" onclick="openHistory()">📊 Ver evolução da semana</button>
-    </div>
-    <p id="moodStatus" class="small"></p>
-  </div>
+  <script>
+    function addPetField(name = "", type = "cão") {
+      const container = document.getElementById("petContainer");
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `
+        <input class="input petName" placeholder="Nome do pet" value="${name}">
+        <select class="petType">
+          <option value="cão" ${type === "cão" ? "selected" : ""}>Cão</option>
+          <option value="gato" ${type === "gato" ? "selected" : ""}>Gato</option>
+          <option value="outro" ${type === "outro" ? "selected" : ""}>Outro</option>
+        </select>
+      `;
+      container.appendChild(row);
+    }
 
-  <div class="card">
-    <h3>Atividades sugeridas para seus pets</h3>
-    <div id="petActivitiesList"></div>
-  </div>
+    function saveUser() {
+      const name = document.getElementById("userName").value.trim();
+      const petNames = [...document.querySelectorAll(".petName")].map(e => e.value.trim());
+      const petTypes = [...document.querySelectorAll(".petType")].map(e => e.value);
 
-  <div class="card">
-    <h3>Histórico (7 dias)</h3>
-    <canvas id="moodChart" width="400" height="160"></canvas>
-    <canvas id="activityChart" width="400" height="160" style="margin-top:12px;"></canvas>
-    <div id="weekSummary" style="margin-top:10px" class="small"></div>
-  </div>
+      if (!name || petNames.some(p => !p)) {
+        alert("Preencha seu nome e os nomes dos pets!");
+        return;
+      }
 
-  <div id="achievementsCard" class="card">
-    <h3>Conquistas</h3>
-    <div class="achiv" id="achievementsContainer"></div>
-  </div>
-</div>
+      const pets = petNames.map((p, i) => ({ nome: p, tipo: petTypes[i] }));
 
-<div class="confetti" id="confetti"></div>
-<div class="footer">Aviso: este app não substitui acompanhamento profissional. Em emergências, procure ajuda local.</div>
+      const user = { name, pets };
+      localStorage.setItem("user", JSON.stringify(user));
 
-<script>
-/* --- Código JS: cadastros, travas, gráficos, frases --- */
-/* (mesmo que já te enviei na versão anterior) */
-</script>
+      showApp(user);
+    }
+
+    function showApp(user) {
+      document.getElementById("registerScreen").style.display = "none";
+      document.getElementById("appScreen").style.display = "block";
+      document.getElementById("welcomeName").textContent = user.name;
+      document.getElementById("petList").textContent = user.pets.map(p => `${p.nome} (${p.tipo})`).join(", ");
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem("user");
+      if (saved) {
+        showApp(JSON.parse(saved));
+      } else {
+        addPetField(); // garante que apareça 1 campo de pet no início
+      }
+    };
+  </script>
 </body>
 </html>
